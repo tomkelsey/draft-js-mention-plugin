@@ -35,5 +35,3 @@ export default class MentionSuggestionsPortal extends Component {
     );
   }
 }
-
-export default MentionSuggestionsPortal;

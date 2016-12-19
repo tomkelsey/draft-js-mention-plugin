@@ -7,10 +7,6 @@
     "email": "nik@nikgraf.com",
     "url": "http://www.nikgraf.com"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/draft-js-plugins/draft-js-plugins.git"
-  },
   "main": "lib/index.js",
   "keywords": [
     "editor",

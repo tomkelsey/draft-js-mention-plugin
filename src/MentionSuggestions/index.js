@@ -41,6 +41,9 @@ export default class MentionSuggestions extends Component {
     if (nextProps.suggestions.size === 0 && this.state.isActive) {
       this.closeDropdown();
     }
+    if (nextProps.suggestions.size >= 1 && !this.state.isActive) {
+      this.openDropdown();
+    }
   }
 
   componentDidUpdate = (prevProps, prevState) => {
@@ -124,10 +127,11 @@ export default class MentionSuggestions extends Component {
     // Checks that the cursor is after the @ character but still somewhere in
     // the word (search term). Setting it to allow the cursor to be left of
     // the @ causes troubles due selection confusion.
+    const plainText = editorState.getCurrentContent().getPlainText();
     const selectionIsInsideWord = leaves
       .filter((leave) => leave !== undefined)
       .map(({ start, end }) => (
-        (start === 0 && anchorOffset === 1 && anchorOffset <= end) || // @ is the first character
+        (start === 0 && anchorOffset === 1 && plainText.charAt(anchorOffset) !== this.props.mentionTrigger && new RegExp(this.props.mentionTrigger, 'g').test(plainText) && anchorOffset <= end) || // @ is the first character
         (anchorOffset > start + 1 && anchorOffset <= end) // @ is in the text or at the end
       ));
 
@@ -298,6 +302,7 @@ export default class MentionSuggestions extends Component {
 
     const {
       entryComponent,
+      popoverComponent = <div />,
       onClose, // eslint-disable-line no-unused-vars
       onOpen, // eslint-disable-line no-unused-vars
       onAddMention, // eslint-disable-line no-unused-vars, no-shadow
@@ -313,31 +318,29 @@ export default class MentionSuggestions extends Component {
       mentionPrefix, // eslint-disable-line no-unused-vars
       ...elementProps } = this.props;
 
-    return (
-      <div
-        {...elementProps}
-        className={theme.mentionSuggestions}
-        role="listbox"
-        id={`mentions-list-${this.key}`}
-        ref={(element) => { this.popover = element; }}
-      >
-        {
-          this.props.suggestions.map((mention, index) => (
-            <Entry
-              key={mention.has('id') ? mention.get('id') : mention.get('name')}
-              onMentionSelect={this.onMentionSelect}
-              onMentionFocus={this.onMentionFocus}
-              isFocused={this.state.focusedOptionIndex === index}
-              mention={mention}
-              index={index}
-              id={`mention-option-${this.key}-${index}`}
-              theme={theme}
-              searchValue={this.lastSearchValue}
-              entryComponent={entryComponent || defaultEntryComponent}
-            />
-          )).toJS()
-        }
-      </div>
+    return React.cloneElement(
+      popoverComponent,
+      {
+        ...elementProps,
+        className: theme.mentionSuggestions,
+        role: 'listbox',
+        id: `mentions-list-${this.key}`,
+        ref: (element) => { this.popover = element; },
+      },
+      this.props.suggestions.map((mention, index) => (
+        <Entry
+          key={mention.has('id') ? mention.get('id') : mention.get('name')}
+          onMentionSelect={this.onMentionSelect}
+          onMentionFocus={this.onMentionFocus}
+          isFocused={this.state.focusedOptionIndex === index}
+          mention={mention}
+          index={index}
+          id={`mention-option-${this.key}-${index}`}
+          theme={theme}
+          searchValue={this.lastSearchValue}
+          entryComponent={entryComponent || defaultEntryComponent}
+        />
+      )).toJS()
     );
   }
 }

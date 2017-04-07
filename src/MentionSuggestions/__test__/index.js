@@ -15,12 +15,12 @@ const mentions = fromJS([
   {
     name: 'Julian Krispel-Samsel',
     link: 'https://twitter.com/juliandoesstuff',
-    avatar: 'https://pbs.twimg.com/profile_images/477132877763579904/m5bFc8LF_400x400.png',
+    avatar: 'https://avatars2.githubusercontent.com/u/1188186?v=3&s=400',
   },
   {
     name: 'Jyoti Puri',
     link: 'https://twitter.com/jyopur',
-    avatar: 'https://pbs.twimg.com/profile_images/705714058939359233/IaJoIa78_400x400.jpg',
+    avatar: 'https://avatars0.githubusercontent.com/u/2182307?v=3&s=400',
   },
   {
     name: 'Max Stoiber',
@@ -30,7 +30,7 @@ const mentions = fromJS([
   {
     name: 'Nik Graf',
     link: 'https://twitter.com/nikgraf',
-    avatar: 'https://pbs.twimg.com/profile_images/535634005769457664/Ppl32NaN_400x400.jpeg',
+    avatar: 'https://avatars0.githubusercontent.com/u/223045?v=3&s=400',
   },
   {
     name: 'Pascal Brandt',
@@ -39,37 +39,37 @@ const mentions = fromJS([
   },
 ]);
 
-describe('MentionSuggestions Component', () => {
-  it('Closes when suggestions is empty', () => {
-    const callbacks = {
+
+function defaultProps() {
+  return {
+    suggestions: mentions,
+    callbacks: {
       onDownArrow: sinon.spy(),
       onUpArrow: sinon.spy(),
       onTab: sinon.spy(),
       onEscape: sinon.spy(),
       handleReturn: sinon.spy()
-    };
-    const store = {
+    },
+    store: {
       getAllSearches: sinon.spy(() => ({ has: () => false })),
       getPortalClientRect: sinon.spy(),
       isEscaped: sinon.spy(),
       resetEscapedSearch: sinon.spy(),
       escapeSearch: sinon.spy(),
-    };
-    const ariaProps = {};
-    const onSearchChange = sinon.spy();
-    const onAddMention = sinon.spy();
-    const positionSuggestions = sinon.stub().returns({});
+    },
+    ariaProps: {},
+    onSearchChange: sinon.spy(),
+    onAddMention: sinon.spy(),
+    positionSuggestions: sinon.stub().returns({}),
+    theme: {},
+  };
+}
+
+describe('MentionSuggestions Component', () => {
+  it('Closes when suggestions is empty', () => {
+    const props = defaultProps();
     const suggestions = mount(
-      <MentionSuggestions
-        ariaProps={ariaProps}
-        onSearchChange={onSearchChange}
-        positionSuggestions={positionSuggestions}
-        suggestions={mentions}
-        callbacks={callbacks}
-        store={store}
-        theme={{}}
-        onAddMention={onAddMention}
-      />
+      <MentionSuggestions {...props} />
     );
 
     suggestions.instance().openDropdown();
@@ -79,5 +79,48 @@ describe('MentionSuggestions Component', () => {
       suggestions: fromJS([]),
     });
     expect(suggestions.state().isActive).to.equal(false);
+  });
+
+  it('The popoverComponent prop changes the popover component', () => {
+    const PopoverComponent = ({ children, ...props }) => (
+      <div data-test-test {...props}>{children}</div>
+    );
+
+    const props = defaultProps();
+    props.popoverComponent = <PopoverComponent />;
+    const suggestions = mount(
+      <MentionSuggestions {...props} />
+    );
+
+    suggestions.instance().openDropdown();
+    expect(suggestions.find('[data-test-test]')).to.have.length(1);
+  });
+
+  it('The popoverComponent recieves the children', () => {
+    let called = false;
+    const PopoverComponent = ({ children, ...props }) => {
+      called = true;
+      expect(React.Children.count(children)).to.equal(mentions.length);
+      return <div {...props}>{children}</div>;
+    };
+
+    const props = defaultProps();
+    props.popoverComponent = <PopoverComponent />;
+    const suggestions = mount(
+      <MentionSuggestions {...props} />
+    );
+
+    suggestions.instance().openDropdown();
+    expect(called).to.equal(true);
+  });
+
+  it('The popoverComponent prop uses div by default', () => {
+    const props = defaultProps();
+    const suggestions = mount(
+      <MentionSuggestions {...props} data-findme />
+    );
+
+    suggestions.instance().openDropdown();
+    expect(suggestions.find('div[data-findme]')).to.have.length(1);
   });
 });
